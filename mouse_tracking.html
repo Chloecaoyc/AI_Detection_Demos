@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Real-Time Mouse Tracking</title>
+        <style>
+            #myElement {
+                width: 50px;
+                height: 50px;
+                position: absolute;
+                border-radius: 50%;
+            }
+        </style>
+    </head>
+
+    <body>
+       a<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hidden Mouse Tracking</title>
+</head>
+
+<body>
+
+    <button onclick="downloadData()">Download Mouse Data</button>
+
+    <script>
+        let mouseData = [];
+        let lastTime = 0;
+
+        //record the movement of the mouse (record every 1000ms)
+        document.addEventListener('mousemove', function (event) {
+            const now = Date.now();
+
+            if (now - lastTime > 1000) {
+                mouseData.push({
+                    x: event.clientX,
+                    y: event.clientY,
+                    t: now
+                });
+
+                lastTime = now;
+            }
+        });
+
+        //download the data for testing
+        function downloadData() {
+            const blob = new Blob([JSON.stringify(mouseData)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mouse_data.json';
+            a.click();
+        }
+    </script>
+
+</body>
+
+</html>
+        
+        <script>
+            const element = document.getElementById('myElement');
+            let x = 0;
+            let y = 0;
+            function animate() {
+                element.style.left = x + 'px';
+                element.style.top = y + 'px';
+                requestAnimationFrame(animate);
+
+            }
+
+            document.addEventListener('mousemove', function (event) {
+                x = event.clientX - element.offsetWidth / 2;
+                y = event.clientY - element.offsetHeight / 2;
+            });
+
+            animate();
+
+        </script>
+    </body>
+
+</html>

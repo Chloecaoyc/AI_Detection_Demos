@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Typing Time Tracking</title>
+</head>
+<body>
+
+<h2>Typing Time Demo</h2>
+
+<textarea id="answerBox" rows="6" cols="60" placeholder="Type your answer..."></textarea>
+<br><br>
+
+<button onclick="downloadData()">Download Data</button>
+
+<script>
+    let typingData = [];
+    let lastKeyTime = null;
+    let activeTime = 0;
+    
+    document.getElementById("answerBox").addEventListener("keydown", function () {
+        let now = Date.now();
+        let gap = null;
+        
+        if (lastKeyTime !== null) {
+            gap = now - lastKeyTime;
+        }
+
+        typingData.push({
+            t: now,
+            gap: gap
+        });
+
+    lastKeyTime = now;
+    });
+
+    function downloadData() {
+        const result = {
+            total_keystrokes: typingData.length,
+            active_typing_time_ms: activeTime,
+            typing_events: typingData
+        };
+
+        const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'typing_data.json';
+        a.click();
+    }
+</script>
+
+</body>
+</html>

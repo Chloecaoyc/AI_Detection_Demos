@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Page Dwell Time Tracking</title>
+</head>
+<body>
+
+<h2>Page Dwell Time Demo</h2>
+<button onclick="downloadData()">Download Data</button>
+
+<script>
+    let data = {};
+    let startTime = Date.now();
+
+    //load time for the page
+    data.enter_time = startTime;
+
+    //record when user left/ecit the page
+    window.addEventListener("beforeunload", function () {
+        data.exit_time = Date.now();
+        data.dwell_time_ms = data.exit_time - data.enter_time;
+    });
+
+    //save the data (for testing purpose)
+    function downloadData() {
+    let current = Date.now();
+    let dwell_ms = current - data.enter_time;
+
+    //use s for easier understanding (was ms)
+    let dwell_s = (dwell_ms / 1000).toFixed(3);
+
+    const result = {
+        enter_time: data.enter_time,
+        current_time: current,
+        dwell_time_s: Number(dwell_s) 
+    };
+
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dwell_time.json';
+    a.click();
+}
+</script>
+
+</body>
+</html>
