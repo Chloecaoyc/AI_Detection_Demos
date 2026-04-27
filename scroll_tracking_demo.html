@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scroll Tracking Demo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    .panel {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 320px;
+      background: #ffffff;
+      border: 1px solid #d9d9d9;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      padding: 12px;
+      z-index: 9999;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1;
+      border: 1px solid #c9c9c9;
+      background: #f6f6f6;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    button:hover {
+      background: #ececec;
+    }
+
+    pre {
+      margin-top: 10px;
+      background: #0e1116;
+      color: #c9f5d3;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 12px;
+      max-height: 180px;
+      overflow: auto;
+    }
+
+    .content {
+      padding: 20px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .block {
+      height: 420px;
+      border: 1px dashed #ccc;
+      border-radius: 10px;
+      margin: 18px 0;
+      padding: 12px;
+      background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Scroll Tracking Demo</h2>
+    <div class="metric"><span>ScrollCount</span><strong id="scrollCount">0</strong></div>
+    <div class="metric"><span>ScrollDirectionSwitch</span><strong id="switchCount">0</strong></div>
+    <div class="metric"><span>Last Direction</span><strong id="lastDirection">none</strong></div>
+    <div class="btn-row">
+      <button id="saveBtn" type="button">Save Metrics</button>
+      <button id="resetBtn" type="button">Reset</button>
+    </div>
+    <pre id="output">Saved payload will appear here.</pre>
+  </div>
+
+  <div class="content">
+    <h1>Long Page for Scroll Testing</h1>
+    <p>
+      Scroll up and down several times. This page tracks:
+      (1) original <code>ScrollCount</code>,
+      (2) added <code>ScrollDirectionSwitch</code>.
+    </p>
+
+    <div class="block">Block 1</div>
+    <div class="block">Block 2</div>
+    <div class="block">Block 3</div>
+    <div class="block">Block 4</div>
+    <div class="block">Block 5</div>
+    <div class="block">Block 6</div>
+  </div>
+
+  <script>
+    // Minimal mock for Qualtrics Embedded Data, so this demo runs standalone.
+    var mockED = {};
+    function ED(key) { return key; }
+    function getEmbeddedData(k) { return mockED[k]; }
+    function setEmbeddedData(k, v) { mockED[k] = v; }
+
+    // ===== Original scroll code shape =====
+    var scrollEventCount = parseInt(getEmbeddedData(ED("ScrollCount")) || "0", 10);
+    function onScrollOriginal() {
+      scrollEventCount++;
+    }
+
+    // ===== Added implementation: ScrollDirectionSwitch =====
+    var scrollDirectionSwitch = parseInt(getEmbeddedData(ED("ScrollDirectionSwitch")) || "0", 10);
+    var lastScrollY = window.scrollY || window.pageYOffset || 0;
+    var lastDir = 0; // 1 = down, -1 = up
+    var MIN_SCROLL_DELTA = 2; // ignore tiny jitter
+
+    function onScrollDirectionSwitch() {
+      var y = window.scrollY || window.pageYOffset || 0;
+      var dy = y - lastScrollY;
+
+      if (Math.abs(dy) < MIN_SCROLL_DELTA) {
+        return;
+      }
+
+      var dir = dy > 0 ? 1 : -1;
+      if (lastDir !== 0 && dir !== lastDir) {
+        scrollDirectionSwitch++;
+      }
+
+      lastDir = dir;
+      lastScrollY = y;
+    }
+
+    function onScroll() {
+      onScrollOriginal();
+      onScrollDirectionSwitch();
+      renderPanel();
+    }
+
+    document.addEventListener("scroll", onScroll, { passive: true });
+
+    function saveAllMetrics() {
+      setEmbeddedData(ED("ScrollCount"), scrollEventCount);
+      setEmbeddedData(ED("ScrollDirectionSwitch"), scrollDirectionSwitch);
+      setEmbeddedData(ED("LastDirection"), lastDir === 1 ? "down" : lastDir === -1 ? "up" : "none");
+      setEmbeddedData(ED("LastScrollY"), Math.round(lastScrollY));
+      renderPanel();
+      renderOutput();
+    }
+
+    function resetMetrics() {
+      scrollEventCount = 0;
+      scrollDirectionSwitch = 0;
+      lastDir = 0;
+      lastScrollY = window.scrollY || window.pageYOffset || 0;
+      mockED = {};
+      renderPanel();
+      renderOutput();
+    }
+
+    function renderPanel() {
+      document.getElementById("scrollCount").textContent = String(scrollEventCount);
+      document.getElementById("switchCount").textContent = String(scrollDirectionSwitch);
+      document.getElementById("lastDirection").textContent = lastDir === 1 ? "down" : lastDir === -1 ? "up" : "none";
+    }
+
+    function renderOutput() {
+      document.getElementById("output").textContent = JSON.stringify(mockED, null, 2);
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", saveAllMetrics);
+    document.getElementById("resetBtn").addEventListener("click", resetMetrics);
+
+    renderPanel();
+    renderOutput();
+  </script>
+</body>
+</html>
